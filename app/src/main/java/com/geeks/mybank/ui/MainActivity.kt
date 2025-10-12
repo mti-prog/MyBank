@@ -1,7 +1,9 @@
 package com.geeks.mybank.ui
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -9,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.geeks.mybank.R
 import com.geeks.mybank.data.model.Account
 import com.geeks.mybank.databinding.ActivityMainBinding
+import com.geeks.mybank.databinding.AddDialogBinding
 import com.geeks.mybank.demain.presenter.AccountContracts
 import com.geeks.mybank.demain.presenter.AccountPresenter
 import com.geeks.mybank.ui.adapter.AccountAdapter
@@ -30,6 +33,28 @@ class MainActivity : AppCompatActivity(), AccountContracts.View {
         }
         initAdapter()
         presenter = AccountPresenter(this)
+
+        binding.fabAddItem.setOnClickListener {
+            showAddDialog()
+        }
+    }
+
+    private fun showAddDialog(){
+        val binding = AddDialogBinding.inflate(LayoutInflater.from(this))
+        with(binding){
+            AlertDialog.Builder(this@MainActivity)
+                .setTitle("Adding new account")
+                .setView(root)
+                .setPositiveButton("Add"){_,_ ->
+                    val account = Account(
+                        name = etName.text.toString(),
+                        balance = etBalance.text.toString().toInt(),
+                        currency = etCurrency.text.toString()
+                    )
+                    presenter.addAccount(account)
+                }
+                .show()
+        }
     }
 
     override fun onResume() {
