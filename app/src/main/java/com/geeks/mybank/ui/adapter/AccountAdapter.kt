@@ -7,11 +7,15 @@ import com.geeks.mybank.data.model.Account
 import com.geeks.mybank.databinding.ItemAccountBinding
 import com.geeks.mybank.ui.adapter.AccountAdapter.AccountViewHolder
 
-class AccountAdapter() : RecyclerView.Adapter<AccountViewHolder>() {
+class AccountAdapter(
+    val onEdit: (Account) -> Unit,
+    val onSwitchToggle: (String, Boolean) -> Unit,
+    val onDelete: (String) -> Unit
+) : RecyclerView.Adapter<AccountViewHolder>() {
 
     private val items = mutableListOf<Account>()
 
-    fun submitList(data : List<Account>){
+    fun submitList(data: List<Account>) {
         items.clear()
         items.addAll(data)
         notifyDataSetChanged()
@@ -21,8 +25,9 @@ class AccountAdapter() : RecyclerView.Adapter<AccountViewHolder>() {
         parent: ViewGroup,
         viewType: Int
     ): AccountViewHolder {
-        return AccountViewHolder(ItemAccountBinding.
-        inflate(LayoutInflater.from(parent.context), parent, false))
+        return AccountViewHolder(
+            ItemAccountBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        )
     }
 
     override fun onBindViewHolder(
@@ -36,11 +41,27 @@ class AccountAdapter() : RecyclerView.Adapter<AccountViewHolder>() {
         return items.size
     }
 
-    inner class AccountViewHolder(private val binding : ItemAccountBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(account: Account) = with(binding){
+    inner class AccountViewHolder(private val binding: ItemAccountBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(account: Account) = with(binding) {
             tvName.text = account.name
             val text = "${account.balance} ${account.currency}"
             tvBalance.text = text
+
+            btnEdit.setOnClickListener {
+                onEdit(account)
+            }
+            btnDelete.setOnClickListener {
+                account.id?.let {
+                    onDelete(it)
+                }
+            }
+            switchActive.isChecked = account.isActive == true
+            switchActive.setOnCheckedChangeListener { buttonView, isChecked ->
+                account.id?.let {
+                    onSwitchToggle(it, isChecked)
+                }
+            }
         }
     }
 }

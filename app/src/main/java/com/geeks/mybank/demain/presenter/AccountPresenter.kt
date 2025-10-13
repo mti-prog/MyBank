@@ -1,6 +1,7 @@
 package com.geeks.mybank.demain.presenter
 
 import com.geeks.mybank.data.model.Account
+import com.geeks.mybank.data.model.AccountState
 import com.geeks.mybank.data.network.ApiClient
 import retrofit2.Call
 import retrofit2.Callback
@@ -30,9 +31,9 @@ class AccountPresenter(private val view: AccountContracts.View) : AccountContrac
         ApiClient.accountsApi.addAccount(account).enqueue(object : Callback<Unit> {
             override fun onResponse(
                 call: Call<Unit?>,
-                response: Response<Unit?>) {
-                if (response.isSuccessful) loadAccounts()
-                else response.code()
+                response: Response<Unit?>
+            ) {
+                responseSuccessful(response)
             }
 
             override fun onFailure(call: Call<Unit?>, t: Throwable) {
@@ -42,5 +43,59 @@ class AccountPresenter(private val view: AccountContracts.View) : AccountContrac
         })
     }
 
+    override fun updateAccountFully(account: Account) {
+        account.id?.let {
+            ApiClient.accountsApi.updateAccount(it, account).enqueue(object : Callback<Unit> {
+                override fun onResponse(
+                    call: Call<Unit?>,
+                    response: Response<Unit?>
+                ) {
+                    responseSuccessful(response)
+                }
+
+                override fun onFailure(call: Call<Unit?>, t: Throwable) {
+
+                }
+
+            })
+        }
+    }
+
+    override fun updateAccountPartially(id: String, isChecked: Boolean) {
+        ApiClient.accountsApi.updateAccountPartially(id, AccountState(isChecked)).enqueue(object  : Callback<Unit>{
+            override fun onResponse(
+                call: Call<Unit?>,
+                response: Response<Unit?>
+            ) {
+                responseSuccessful(response)
+            }
+
+            override fun onFailure(call: Call<Unit?>, t: Throwable) {
+            }
+
+        })
+    }
+
+    override fun deleteAccount(id: String) {
+        ApiClient.accountsApi.deleteAccount(id).enqueue(object : Callback<Unit>{
+            override fun onResponse(
+                call: Call<Unit?>,
+                response: Response<Unit?>
+            ) {
+                responseSuccessful(response)
+            }
+
+            override fun onFailure(call: Call<Unit?>, t: Throwable) {
+            }
+
+        })
+    }
+
+
+    fun responseSuccessful(response: Response<Unit?>){
+        if (response.isSuccessful) loadAccounts()
+        else response.code()
+
+    }
 
 }
