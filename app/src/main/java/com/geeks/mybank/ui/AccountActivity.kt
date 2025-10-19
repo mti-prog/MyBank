@@ -3,6 +3,7 @@ package com.geeks.mybank.ui
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -12,14 +13,13 @@ import com.geeks.mybank.R
 import com.geeks.mybank.data.model.Account
 import com.geeks.mybank.databinding.ActivityMainBinding
 import com.geeks.mybank.databinding.AddDialogBinding
-import com.geeks.mybank.demain.presenter.AccountContracts
-import com.geeks.mybank.demain.presenter.AccountPresenter
+import com.geeks.mybank.ui.viewModel.AccountViewModel
 import com.geeks.mybank.ui.adapter.AccountAdapter
 
-class MainActivity : AppCompatActivity(), AccountContracts.View {
+class AccountActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: AccountAdapter
-    private lateinit var presenter: AccountPresenter
+    private val viewModel: AccountViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,17 +32,24 @@ class MainActivity : AppCompatActivity(), AccountContracts.View {
             insets
         }
         initAdapter()
-        presenter = AccountPresenter(this)
-
+        subscribeToLiveData()
         binding.fabAddItem.setOnClickListener {
             showAddDialog()
         }
     }
 
+    private fun subscribeToLiveData() {
+        viewModel.accounts.observe(this) {
+            adapter.submitList(it)
+
+        }
+    }
+
+
     private fun showAddDialog() {
         val binding = AddDialogBinding.inflate(LayoutInflater.from(this))
         with(binding) {
-            AlertDialog.Builder(this@MainActivity)
+            AlertDialog.Builder(this@AccountActivity)
                 .setTitle("Adding new account")
                 .setView(root)
                 .setPositiveButton("Add") { _, _ ->
@@ -51,7 +58,7 @@ class MainActivity : AppCompatActivity(), AccountContracts.View {
                         balance = etBalance.text.toString().toInt(),
                         currency = etCurrency.text.toString()
                     )
-                    presenter.addAccount(account)
+                    viewModel.addAccount(account)
                 }
                 .show()
         }
@@ -59,7 +66,7 @@ class MainActivity : AppCompatActivity(), AccountContracts.View {
 
     override fun onResume() {
         super.onResume()
-        presenter.loadAccounts()
+        viewModel.loadAccounts()
     }
 
     private fun initAdapter() = with(binding) {
@@ -68,14 +75,14 @@ class MainActivity : AppCompatActivity(), AccountContracts.View {
                 showEditDialog(it)
             },
             onSwitchToggle = { id, isActive ->
-                presenter.updateAccountPartially(id, isActive)
+                viewModel.updateAccountPartially(id, isActive)
             },
             onDelete = {
                 showDeleteDialog(it)
             }
         )
         rec.layoutManager =
-            LinearLayoutManager(this@MainActivity, LinearLayoutManager.VERTICAL, false)
+            LinearLayoutManager(this@AccountActivity, LinearLayoutManager.VERTICAL, false)
         rec.adapter = adapter
     }
 
@@ -84,7 +91,7 @@ class MainActivity : AppCompatActivity(), AccountContracts.View {
             .setTitle("Delete")
             .setMessage("Do you want to delete this account?")
             .setPositiveButton("Delete") { _, _ ->
-                presenter.deleteAccount(id)
+                viewModel.deleteAccount(id)
             }
             .setNegativeButton("Cancel") { _, _ ->
 
@@ -99,7 +106,7 @@ class MainActivity : AppCompatActivity(), AccountContracts.View {
                 etName.setText(name)
                 etBalance.setText(balance.toString())
                 etCurrency.setText(currency)
-                AlertDialog.Builder(this@MainActivity)
+                AlertDialog.Builder(this@AccountActivity)
                     .setTitle("Editing account")
                     .setView(root)
                     .setPositiveButton("Edit") { _, _ ->
@@ -108,15 +115,10 @@ class MainActivity : AppCompatActivity(), AccountContracts.View {
                             balance = etBalance.text.toString().toInt(),
                             currency = etCurrency.text.toString()
                         )
-                        presenter.updateAccountFully(updatedAccount)
+                        viewModel.updateAccountFully(updatedAccount)
                     }
                     .show()
             }
         }
-    }
-
-
-    override fun showAccounts(accountList: List<Account>) {
-        adapter.submitList(accountList)
     }
 }
