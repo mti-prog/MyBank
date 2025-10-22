@@ -15,7 +15,9 @@ import com.geeks.mybank.databinding.ActivityMainBinding
 import com.geeks.mybank.databinding.AddDialogBinding
 import com.geeks.mybank.ui.viewModel.AccountViewModel
 import com.geeks.mybank.ui.adapter.AccountAdapter
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AccountActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: AccountAdapter
